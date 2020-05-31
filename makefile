@@ -1,24 +1,35 @@
-TARGET = app
+COMPILER  = g++
+CFLAGS    = -g -MMD -MP -Wall -Wextra -Winit-self -Wno-missing-field-initializers
+ifeq "$(shell getconf LONG_BIT)" "64"
+  LDFLAGS =
+else
+  LDFLAGS =
+endif
+LIBS      =
+INCLUDE   = -I./include
+TARGET    = ./bin/$(shell basename `readlink -f .`)
+SRCDIR    = ./source
+ifeq "$(strip $(SRCDIR))" ""
+  SRCDIR  = .
+endif
+SOURCES   = $(wildcard $(SRCDIR)/*.cpp)
+OBJDIR    = ./obj
+ifeq "$(strip $(OBJDIR))" ""
+  OBJDIR  = .
+endif
+OBJECTS   = $(addprefix $(OBJDIR)/, $(notdir $(SOURCES:.cpp=.o)))
+DEPENDS   = $(OBJECTS:.o=.d)
 
-SRCS  = $(shell find ./src     -type f -name * .cpp)
-HEADS = $(shell find ./include -type f -name * .h)
-OBJS = $(SRCS:.cpp=.o)
-DEPS = Makefile.depend
+$(TARGET): $(OBJECTS) $(LIBS)
+	$(COMPILER) -o $@ $^ $(LDFLAGS)
 
-INCLUDES = -I./include
-CXXFLAGS = -O2 -Wall $(INCLUDES)
-LDFLAGS = -lm
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	-mkdir -p $(OBJDIR)
+	$(COMPILER) $(CFLAGS) $(INCLUDE) -o $@ -c $<
 
+all: clean $(TARGET)
 
-all: $(TARGET)
+clean:
+	-rm -f $(OBJECTS) $(DEPENDS) $(TARGET)
 
-$(TARGET): $(OBJS) $(HEADS) $(CXX) $(LDFLAGS) -o $@ $(OBJS)
-  
-run: all @./$(TRAGET)
-    
-.PHONY: depend clean
-depend: $(CXX) $(INCLDES) -MM $(SRCS) > $(DEPS) @sed -i -E "s/^(.+?).o: ([^ ]+?)\1/\2\1.o: \2\1/g" $(DEPS)
-   
-clean: $(RM) $(OBJS) $(TARGET)
-  
--include $(DEPS)
+-include $(DEPENDS)
