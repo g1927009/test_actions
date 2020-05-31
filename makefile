@@ -15,11 +15,11 @@ all: $(TARGET)
 $(TARGET): $(OBJS) $(HEADS) 
    $(CXX) $(LDFLAGS) -o $@ $(OBJS)
   
-run: all 
+run: all
    @./$(TRAGET)
     
 .PHONY: depend clean
-depend: 
+depend:
    $(CXX) $(INCLDES) -MM $(SRCS) > $(DEPS) 
    @sed -i -E "s/^(.+?).o: ([^ ]+?)\1/\2\1.o: \2\1/g" $(DEPS)
    
